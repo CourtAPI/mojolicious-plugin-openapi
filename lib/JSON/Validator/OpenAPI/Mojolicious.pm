@@ -15,7 +15,7 @@ our %VERSIONS      = (
   v3 => 'https://spec.openapis.org/oas/3.0/schema/2019-04-02'
 );
 
-has version => 2;
+has openapi_version => 2;
 
 sub E { JSON::Validator::Error->new(@_) }
 
@@ -26,7 +26,7 @@ has generate_definitions_path => sub {
   return sub {
     my $ref = shift;
 
-    if ($self->version eq '3') {
+    if ($self->openapi_version eq '3') {
 
       # Try to determine the path from the fqn
       # We are only interested in the path in the fqn, so following fqn:
@@ -50,7 +50,7 @@ sub load_and_validate_schema {
   local $args->{schema}
     = $args->{schema} ? $VERSIONS{$args->{schema}} || $args->{schema} : $VERSIONS{v2};
 
-  $self->version($1) if !$self->{version} and $args->{schema} =~ m!(?:/v||/oas/)(\d)!;
+  $self->openapi_version($1) if !$self->{openapi_version} and $args->{schema} =~ m!(?:/v||/oas/)(\d)!;
 
   my @errors;
   my $gather = sub {
@@ -139,7 +139,7 @@ sub validate_response {
   return JSON::Validator::E('/' => "No responses rules defined for status $status.")
     unless my $res_schema = $schema->{responses}{$status} || $schema->{responses}{default};
 
-  if ($self->version eq '3') {
+  if ($self->openapi_version eq '3') {
     my $accept = $self->_negotiate_accept_header($c, $res_schema);
     return JSON::Validator::E('/' => "No responses rules defined for $accept.")
       unless $res_schema = $res_schema->{content}{$accept};
@@ -432,7 +432,7 @@ sub _validate_request_value {
 sub _validate_response_headers {
   my ($self, $c, $schema) = @_;
   my $input   = $self->_get_response_data($c, 'header');
-  my $version = $self->version;
+  my $version = $self->openapi_version;
   my @errors;
 
   for my $name (keys %$schema) {
@@ -480,7 +480,7 @@ sub _validate_type_object {
   # tools, even though not officially supported by OpenAPI.
   my %properties = %{$schema->{properties} || {}};
   local $schema->{properties} = \%properties;
-  if ($self->version eq '3') {
+  if ($self->openapi_version eq '3') {
     for my $key (keys %properties) {
       next unless $properties{$key}{nullable};
       $properties{$key} = {%{$properties{$key}}};
@@ -607,9 +607,9 @@ compiled to use 64 bit integers.
 
 =back
 
-=head2 version
+=head2 openapi_version
 
-  $str = $validator->version;
+  $str = $validator->openapi_version;
 
 Used to get the OpenAPI Schema version to use. Will be set automatically when
 using L</load_and_validate_schema>, unless already set. Supported values are
@@ -642,7 +642,7 @@ C<$ref> in your specification.
 =item * version_from_class
 
 Setting this to a module/class name will use the version number from the
-class and overwrite the version in the specification:
+class and overwrite the OpenAPI version in the specification:
 
   {
     "info": {

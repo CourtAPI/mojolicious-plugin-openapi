@@ -74,18 +74,18 @@ sub _add_default_response {
   return unless @{$self->{default_response_codes}};
 
   my $ref
-    = $self->validator->version ge '3'
+    = $self->validator->openapi_version ge '3'
     ? ($schema_data->{components}{schemas}{$name} ||= $self->_default_schema)
     : ($schema_data->{definitions}{$name} ||= $self->_default_schema);
 
   my %schema
-    = $self->validator->version ge '3'
+    = $self->validator->openapi_version ge '3'
     ? ('$ref' => "#/components/schemas/$name")
     : ('$ref' => "#/definitions/$name");
 
   tie %schema, 'JSON::Validator::Ref', $ref, $schema{'$ref'}, $schema{'$ref'};
   for my $code (@{$self->{default_response_codes}}) {
-    if ($self->validator->version ge '3') {
+    if ($self->validator->openapi_version ge '3') {
       $op_spec->{responses}{$code} ||= $self->_default_schema_v3(\%schema);
     }
     else {
@@ -178,7 +178,7 @@ sub _build_route {
   my $route = $config->{route};
 
   my $base_path
-    = $self->validator->version eq '3'
+    = $self->validator->openapi_version eq '3'
     ? Mojo::URL->new($self->validator->get('/servers/0/url') || '/')->path->to_string
     : $self->validator->get('/basePath') || '/';
 

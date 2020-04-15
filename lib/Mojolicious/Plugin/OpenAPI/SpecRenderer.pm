@@ -119,7 +119,7 @@ sub _render_spec {
     $openapi->{bundled} ||= $openapi->validator->bundle;
     %spec = %{$openapi->{bundled}};
 
-    if ($openapi->validator->version ge '3') {
+    if ($openapi->validator->openapi_version ge '3') {
       $spec{servers}[0]{url} = $req_url->to_string;
       $spec{servers}[0]{url} =~ s!\.(html|json)$!!;
       delete $spec{basePath};    # Added by Plugin::OpenAPI
